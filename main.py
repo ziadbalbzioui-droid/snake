@@ -1,5 +1,6 @@
 from pyray import *
 import random
+import time
 
 init_window(800,450, "Mon jeu")
 set_target_fps(10)
@@ -15,6 +16,8 @@ perdu = False
 
 
 fruit = [random.randint(0,WIDTH),random.randint(0,HEIGHT)]
+super_fruit = None
+super_spawn_time = 0  # temps d'apparition du super fruit
 score = 0 
 
 screen_width = get_monitor_width(0)
@@ -34,6 +37,14 @@ while not window_should_close() :
     if is_key_pressed(KEY_DOWN) and vitesse != [0,-1]:
         vitesse = [0,1]
     
+    # Apparition aléatoire du super fruit
+    if not super_fruit and random.random() < 0.02:  # 2% de chance par frame
+        super_fruit = [random.randint(0, WIDTH-1), random.randint(0, HEIGHT-1)]
+        super_spawn_time = time.time()
+
+    #Disparition (temps d'apparition = 3 secondes)
+    if super_fruit and time.time() - super_spawn_time > 3:
+        super_fruit = None
 
     #ANIMATION DU SERPENT
     if not perdu : 
@@ -45,19 +56,26 @@ while not window_should_close() :
             snake = snake + [new_head]
             fruit = [random.randint(0,WIDTH-1),random.randint(0,HEIGHT-1)]
             score += 1
+        elif super_fruit and new_head == super_fruit:
+            snake = snake + [new_head]
+            
+            super_fruit = None
+            score += 3
         else : 
             snake = snake[1:] + [new_head]
         
         draw_rectangle(fruit[0]*SIDE,fruit[1]*SIDE,SIDE-2,SIDE-2,RED)
         draw_text("Score : "+ str(score), 10, 10, 30, GRAY)
 
+    if super_fruit:
+        draw_rectangle(super_fruit[0]*SIDE, super_fruit[1]*SIDE, SIDE-2, SIDE-2, GOLD)
 
-
+    #Circularité du snake
     if new_head[0] >= WIDTH :  
         new_head[0] = 0
     if new_head[0] < 0 : 
         new_head[0] = WIDTH - 1
-    if new_head[1] >= HEIGHT : 
+    if new_head[1] > HEIGHT : 
         new_head[1] = 0
     if new_head[1] < 0 : 
         new_head[1] = HEIGHT 
